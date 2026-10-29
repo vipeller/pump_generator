@@ -16,15 +16,21 @@ use tokio::{
     time::{Instant, sleep_until, timeout_at},
 };
 
-use crate::{model::MODEL_REFERENCE_PROPERTY_NAME, simulation::Simulation};
+use crate::{
+    model::{ASSET_ID_PROPERTY_NAME, MODEL_REFERENCE_PROPERTY_NAME},
+    simulation::Simulation,
+};
 
 const QUEUE_CAPACITY: usize = 128;
 
-pub fn telemetry_properties(model_reference: &str) -> PublishProperties {
+pub fn telemetry_properties(model_reference: &str, asset_id: &str) -> PublishProperties {
     PublishProperties {
         payload_format_indicator: Some(1),
         content_type: Some("application/json".into()),
-        user_properties: vec![(MODEL_REFERENCE_PROPERTY_NAME.into(), model_reference.into())],
+        user_properties: vec![
+            (MODEL_REFERENCE_PROPERTY_NAME.into(), model_reference.into()),
+            (ASSET_ID_PROPERTY_NAME.into(), asset_id.into()),
+        ],
         ..PublishProperties::default()
     }
 }
@@ -34,19 +40,21 @@ pub async fn publish(
     mut options: MqttOptions,
     topic: &str,
     model_reference: &str,
+    asset_id: &str,
     max_messages_per_second: Option<u32>,
     progress_timeout: Duration,
 ) -> Result<()> {
     validate_parameters(
         topic,
         model_reference,
+        asset_id,
         max_messages_per_second,
         progress_timeout,
     )?;
     options.set_outgoing_inflight_upper_limit(QUEUE_CAPACITY as u16);
     let (client, mut eventloop) = AsyncClient::new(options, QUEUE_CAPACITY);
     let expected = simulation.sample_count();
-    let properties = telemetry_properties(model_reference);
+    let properties = telemetry_properties(model_reference, asset_id);
     let spacing = max_messages_per_second
         .map(|rate| Duration::from_nanos(1_000_000_000_u64.div_ceil(u64::from(rate))));
     let (sent_tx, mut sent_rx) = mpsc::channel(1);
@@ -162,6 +170,7 @@ pub async fn publish(
 fn validate_parameters(
     topic: &str,
     model_reference: &str,
+    asset_id: &str,
     max_messages_per_second: Option<u32>,
     progress_timeout: Duration,
 ) -> Result<()> {
@@ -169,12 +178,12 @@ fn validate_parameters(
         !topic.is_empty() && topic.len() <= u16::MAX as usize && !topic.contains(['+', '#', '\0']),
         "topic must be a nonempty MQTT topic without wildcards or NUL characters (maximum 65535 bytes)"
     );
-    ensure!(
-        !model_reference.trim().is_empty()
-            && model_reference.len() <= u16::MAX as usize
-            && !model_reference.contains('\0'),
-        "model reference must be nonempty and contain no NUL characters (maximum 65535 bytes)"
-    );
+    for (name, value) in [("model reference", model_reference), ("asset ID", asset_id)] {
+        ensure!(
+            !value.trim().is_empty() && value.len() <= u16::MAX as usize && !value.contains('\0'),
+            "{name} must be nonempty and contain no NUL characters (maximum 65535 bytes)"
+        );
+    }
     ensure!(
         max_messages_per_second != Some(0),
         "publish rate must be positive"
@@ -191,30 +200,57 @@ mod tests {
     use super::*;
 
     #[test]
-    fn publications_have_exactly_one_model_user_property() {
-        let properties = telemetry_properties("urn:test:model:1");
+    fn publications_have_model_reference_and_asset_id_user_properties() {
+        let properties = telemetry_properties("urn:test:model:1", "pump-001");
         assert_eq!(
             properties.user_properties,
-            vec![(
-                MODEL_REFERENCE_PROPERTY_NAME.into(),
-                "urn:test:model:1".into()
-            )]
+            vec![
+                (
+                    MODEL_REFERENCE_PROPERTY_NAME.into(),
+                    "urn:test:model:1".into()
+                ),
+                ("asset-id".into(), "pump-001".into()),
+            ]
         );
         assert_eq!(properties.content_type.as_deref(), Some("application/json"));
         assert_eq!(properties.payload_format_indicator, Some(1));
     }
 
     #[test]
+    fn user_property_values_respect_mqtt_byte_limits() {
+        let timeout = Duration::from_secs(30);
+        let at_limit = "x".repeat(65_535);
+        let too_long = "x".repeat(65_536);
+        let multibyte_too_long = "é".repeat(32_768);
+        assert!(validate_parameters("pumps/1", &at_limit, &at_limit, None, timeout).is_ok());
+        assert!(validate_parameters("pumps/1", &too_long, "pump-001", None, timeout).is_err());
+        for asset_id in [&too_long, &multibyte_too_long] {
+            assert!(validate_parameters("pumps/1", "urn:test:1", asset_id, None, timeout).is_err());
+        }
+    }
+
+    #[test]
     fn invalid_publish_parameters_fail_before_connecting() {
         let timeout = Duration::from_secs(30);
         for topic in ["", "pumps/+/telemetry", "pumps/#", "pump\0"] {
-            assert!(validate_parameters(topic, "urn:test:1", None, timeout).is_err());
+            assert!(validate_parameters(topic, "urn:test:1", "pump-001", None, timeout).is_err());
         }
         for reference in ["", " ", "urn:test\0"] {
-            assert!(validate_parameters("pumps/1", reference, None, timeout).is_err());
+            assert!(validate_parameters("pumps/1", reference, "pump-001", None, timeout).is_err());
         }
-        assert!(validate_parameters("pumps/1", "urn:test:1", Some(0), timeout).is_err());
-        assert!(validate_parameters("pumps/1", "urn:test:1", None, Duration::ZERO).is_err());
-        assert!(validate_parameters("pumps/1", "urn:test:1", Some(5000), timeout).is_ok());
+        for asset_id in ["", " ", "pump\0"] {
+            let error =
+                validate_parameters("pumps/1", "urn:test:1", asset_id, None, timeout).unwrap_err();
+            assert!(error.to_string().contains("asset ID"));
+        }
+        assert!(
+            validate_parameters("pumps/1", "urn:test:1", "pump-001", Some(0), timeout).is_err()
+        );
+        assert!(
+            validate_parameters("pumps/1", "urn:test:1", "pump-001", None, Duration::ZERO).is_err()
+        );
+        assert!(
+            validate_parameters("pumps/1", "urn:test:1", "pump-001", Some(5000), timeout).is_ok()
+        );
     }
 }

@@ -22,6 +22,10 @@ struct Args {
     #[arg(long, required_unless_present = "dry_run")]
     model_reference: Option<String>,
 
+    /// Asset identifier stamped on every MQTT message as the asset-id User Property.
+    #[arg(long, required_unless_present = "dry_run")]
+    asset_id: Option<String>,
+
     /// First event timestamp (RFC 3339); default: yesterday at 00:00:00 UTC.
     #[arg(long)]
     start_time: Option<DateTime<Utc>>,
@@ -119,6 +123,7 @@ async fn main() -> Result<()> {
             args.model_reference
                 .as_deref()
                 .context("missing model reference")?,
+            args.asset_id.as_deref().context("missing asset ID")?,
             args.max_messages_per_second,
             Duration::from_secs(u64::from(args.progress_timeout_seconds)),
         )
@@ -230,12 +235,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cli_requires_model_reference_only_for_mqtt() {
+    fn cli_requires_model_reference_and_asset_id_only_for_mqtt() {
         assert!(Args::try_parse_from(["pump_generator"]).is_err());
         assert!(Args::try_parse_from(["pump_generator", "--dry-run"]).is_ok());
         assert!(
-            Args::try_parse_from(["pump_generator", "--model-reference", "urn:test:1"]).is_ok()
+            Args::try_parse_from(["pump_generator", "--model-reference", "urn:test:1"]).is_err()
         );
+        assert!(Args::try_parse_from(["pump_generator", "--asset-id", "pump-001"]).is_err());
+        let args = Args::try_parse_from([
+            "pump_generator",
+            "--model-reference",
+            "urn:test:1",
+            "--asset-id",
+            "pump-001",
+        ])
+        .unwrap();
+        assert_eq!(args.model_reference.as_deref(), Some("urn:test:1"));
+        assert_eq!(args.asset_id.as_deref(), Some("pump-001"));
     }
 
     #[test]

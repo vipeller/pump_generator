@@ -19,6 +19,7 @@ use tokio::{
 
 const TOPIC: &str = "pumps/wire-test/telemetry";
 const MODEL_REFERENCE: &str = "urn:pump-generator:model:wire-test:1";
+const ASSET_ID: &str = "pump-wire-test-001";
 const IO_TIMEOUT: Duration = Duration::from_secs(3);
 const TEST_TIMEOUT: Duration = Duration::from_secs(12);
 const PROGRESS_TIMEOUT: Duration = Duration::from_secs(30);
@@ -151,6 +152,7 @@ async fn publishes_all_snapshots_and_waits_for_final_puback_before_disconnect() 
             options,
             TOPIC,
             MODEL_REFERENCE,
+            ASSET_ID,
             None,
             PROGRESS_TIMEOUT,
         );
@@ -176,10 +178,13 @@ async fn publishes_all_snapshots_and_waits_for_final_puback_before_disconnect() 
                 .context("missing PUBLISH properties")?;
             assert_eq!(
                 properties.user_properties,
-                vec![(
-                    MODEL_REFERENCE_PROPERTY_NAME.to_owned(),
-                    MODEL_REFERENCE.to_owned()
-                )]
+                vec![
+                    (
+                        MODEL_REFERENCE_PROPERTY_NAME.to_owned(),
+                        MODEL_REFERENCE.to_owned()
+                    ),
+                    ("asset-id".to_owned(), ASSET_ID.to_owned()),
+                ]
             );
             assert_eq!(properties.content_type.as_deref(), Some("application/json"));
             assert_eq!(properties.payload_format_indicator, Some(1));
@@ -244,6 +249,7 @@ async fn paced_publications_allow_intentional_sleep_with_short_progress_timeout(
             options,
             TOPIC,
             MODEL_REFERENCE,
+            ASSET_ID,
             Some(1),
             Duration::from_secs(1),
         );
@@ -302,6 +308,7 @@ async fn full_inflight_window_blocks_then_delivers_all_144_snapshots() -> Result
             options,
             TOPIC,
             MODEL_REFERENCE,
+            ASSET_ID,
             None,
             PROGRESS_TIMEOUT,
         );
@@ -354,6 +361,7 @@ async fn not_authorized_puback_fails_promptly() -> Result<()> {
             options,
             TOPIC,
             MODEL_REFERENCE,
+            ASSET_ID,
             None,
             PROGRESS_TIMEOUT,
         );
@@ -384,6 +392,7 @@ async fn closed_connection_fails_without_waiting_for_progress_timeout() -> Resul
             options,
             TOPIC,
             MODEL_REFERENCE,
+            ASSET_ID,
             None,
             PROGRESS_TIMEOUT,
         );
@@ -415,6 +424,7 @@ async fn missing_pubacks_time_out_even_while_keepalives_succeed() -> Result<()> 
             options,
             TOPIC,
             MODEL_REFERENCE,
+            ASSET_ID,
             None,
             Duration::from_secs(3),
         );

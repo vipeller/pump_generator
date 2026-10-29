@@ -20,7 +20,7 @@ cargo run --release --locked -- --dry-run --start-time 2026-10-28T00:00:00Z > te
 Publish to a local MQTT 5 broker:
 
 ```text
-cargo run --release --locked -- --broker-host localhost --model-reference urn:pump-generator:model:pump-telemetry:1.0.0 --start-time 2026-10-28T00:00:00Z
+cargo run --release --locked -- --broker-host localhost --model-reference urn:pump-generator:model:pump-telemetry:1.0.0 --asset-id pump-001 --start-time 2026-10-28T00:00:00Z
 ```
 
 The URN in this example is the bundled TD's identifier, **not a downloadable URL**. Register the model with the consumer's registry, or host the TD and pass its actual URL instead. This application does not host, register, retrieve, or resolve the model.
@@ -30,6 +30,7 @@ The URN in this example is the bundled TD's identifier, **not a downloadable URL
 | Argument | Default | Meaning |
 | --- | --- | --- |
 | `--model-reference` | Required when publishing | Model URL or registry identifier placed on every publication |
+| `--asset-id` | Required when publishing | Asset identifier placed on every publication as an MQTT User Property |
 | `--start-time` | Yesterday, 00:00:00 UTC | First event time, RFC 3339; offsets are normalized to UTC |
 | `--duration-hours` | `24` | Virtual duration, at least 12 hours |
 | `--sample-interval-ms` | `1000` | Virtual distance between samples |
@@ -99,15 +100,18 @@ The TD preserves the supplied `dov:unit`, `dov:normalOperatingMinimum`, and `dov
 
 The TD's MQTT forms describe the default local endpoint, topic, and unauthenticated security configuration. If deploying elsewhere, update the forms/security to match that deployment and publish/register the revised TD. The CLI does not rewrite the bundled model. Subscription forms use `mqv:filter` and string QoS `"1"`, as specified by the WoT MQTT binding; runtime delivery uses QoS level 1. Per-property forms use the same aggregate JSON stream; the abbreviated key identifies the value in each snapshot.
 
-### One MQTT User Property
+### MQTT User Properties
 
-Every PUBLISH carries exactly one MQTT 5 User Property:
+Every PUBLISH carries two MQTT 5 User Properties:
 
 ```text
 model-reference = <value supplied with --model-reference>
+asset-id        = <value supplied with --asset-id>
 ```
 
-**`model-reference` is a provisional key**, not the final integration name. Replace only `MODEL_REFERENCE_PROPERTY_NAME` in [`src/model.rs`](src/model.rs) when the fixed name is known, and update this documentation. The value comes from the one CLI argument; the name is not CLI-configurable. The reference is metadata, not a JSON payload field.
+Both values are required when publishing and remain constant throughout a run. Their names are fixed in the application, not CLI-configurable. Values must be nonblank, contain no NUL characters, and fit MQTT's 65,535-byte UTF-8 string limit. These properties are message metadata, not JSON payload fields, so the TD's measurement keys are unchanged. Dry-run mode requires neither value.
+
+**`model-reference` is a provisional key**, not the final integration name. Replace only `MODEL_REFERENCE_PROPERTY_NAME` in [`src/model.rs`](src/model.rs) when the fixed name is known, and update this documentation. The asset property name is `asset-id`.
 
 Publications also set the standard MQTT content type `application/json` and UTF-8 payload-format indicator. These are standard protocol properties, not additional User Properties.
 
@@ -171,7 +175,7 @@ Nominal values are approximately 7.7 kg/s, 234,000 Pa, 71%, and 2,538 W. This is
 - The optional rate cap paces actual outgoing publications; backpressure does not lead to catch-up bursts.
 - Success is reported only after every publication receives a successful PUBACK and the MQTT disconnect has been sent.
 - Rejected publications, lost connections, or lack of delivery progress cause a nonzero exit. There is no automatic reconnect, persisted checkpoint, or resume in this initial version. A failed run can leave a partially delivered dataset.
-- QoS 1 is not exactly-once delivery. Consumers should tolerate duplicates, including reruns; pump identity from the topic plus `Timestamp` can be used as a deduplication key.
+- QoS 1 is not exactly-once delivery. Consumers should tolerate duplicates, including reruns; the `asset-id` User Property plus `Timestamp` can be used as a deduplication key.
 - Broker acceptance does **not** prove database storage. A no-matching-subscribers acknowledgement is accepted, with a warning.
 
 **The consumer must use the payload's `Timestamp` as the measurement time.** If it stores ingestion time instead, an accelerated day will be compressed into the real publishing interval.
@@ -181,7 +185,7 @@ Nominal values are approximately 7.7 kg/s, 234,000 Pa, 71%, and 2,538 W. This is
 - [`src/simulation.rs`](src/simulation.rs): virtual clock, operating point, seeded variation, bearing deterioration.
 - [`src/mqtt.rs`](src/mqtt.rs): MQTT 5 publishing, metadata, backpressure, pacing, acknowledgement handling.
 - [`src/main.rs`](src/main.rs): CLI, TLS/authentication settings, dry-run output.
-- [`src/model.rs`](src/model.rs): embedded TD and provisional fixed User Property name.
+- [`src/model.rs`](src/model.rs): embedded TD and fixed User Property names.
 - [`tests/model_contract.rs`](tests/model_contract.rs): exact payload/model key and metadata agreement.
 - [`tests/mqtt_publish.rs`](tests/mqtt_publish.rs): local MQTT 5 wire tests, including delivery failure, final-ACK gating, pacing, and a full in-flight window. No external broker is required.
 
