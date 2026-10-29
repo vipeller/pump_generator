@@ -191,7 +191,7 @@ fn original_null_node_ids_are_explicit_source_placeholders() {
 }
 
 #[test]
-fn property_metadata_preserves_titles_units_and_normal_operating_limits() {
+fn property_metadata_preserves_titles_units_and_expected_operating_limits() {
     let td = thing_description();
     let properties = &td["properties"];
     for (key, name, unit, minimum, maximum) in [
@@ -209,13 +209,13 @@ fn property_metadata_preserves_titles_units_and_normal_operating_limits() {
             format!("Operational.Measurements.{name}")
         );
         assert_eq!(property["type"], "number", "{key}");
-        assert_eq!(property["dov:unit"], unit, "{key}");
-        assert_eq!(property["dov:normalOperatingMinimum"], minimum, "{key}");
-        assert_eq!(property["dov:normalOperatingMaximum"], maximum, "{key}");
+        assert_eq!(property["unit"], unit, "{key}");
+        assert_eq!(property["dov:expectedMinimum"], minimum, "{key}");
+        assert_eq!(property["dov:expectedMaximum"], maximum, "{key}");
         for bound in ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"] {
             assert!(
                 property.get(bound).is_none(),
-                "{key}: normal operating limits must not become schema bounds"
+                "{key}: expected operating limits must not become schema bounds"
             );
         }
     }
@@ -227,8 +227,8 @@ fn property_metadata_preserves_titles_units_and_normal_operating_limits() {
     for absent in [
         "maximum",
         "exclusiveMaximum",
-        "dov:normalOperatingMinimum",
-        "dov:normalOperatingMaximum",
+        "dov:expectedMinimum",
+        "dov:expectedMaximum",
     ] {
         assert!(starts.get(absent).is_none(), "NS has no operating range");
     }
@@ -239,10 +239,27 @@ fn property_metadata_preserves_titles_units_and_normal_operating_limits() {
     ] {
         assert_eq!(properties[key]["title"], title);
         assert_eq!(properties[key]["type"], "boolean");
-        assert_eq!(properties[key]["dov:unit"], "state");
+        assert_eq!(properties[key]["unit"], "state");
     }
     assert_eq!(properties["Timestamp"]["type"], "string");
     assert_eq!(properties["Timestamp"]["format"], "date-time");
+}
+
+#[test]
+fn obsolete_unit_and_operating_range_annotations_are_absent() {
+    let td = thing_description();
+    for (key, property) in td["properties"].as_object().unwrap() {
+        for obsolete in [
+            "dov:unit",
+            "dov:normalOperatingMinimum",
+            "dov:normalOperatingMaximum",
+        ] {
+            assert!(
+                property.get(obsolete).is_none(),
+                "{key} still uses {obsolete}"
+            );
+        }
+    }
 }
 
 #[test]
@@ -271,7 +288,7 @@ fn final_bearing_anomaly_is_representable_without_changing_normal_limits() {
         "last BT must exceed the normal 423 K limit, got {bearing_temperature}"
     );
     let bearing_schema = &td["properties"]["BT"];
-    assert_eq!(bearing_schema["dov:normalOperatingMaximum"], 423);
+    assert_eq!(bearing_schema["dov:expectedMaximum"], 423);
     assert_eq!(bearing_schema["type"], "number");
     for constraint in [
         "maximum",

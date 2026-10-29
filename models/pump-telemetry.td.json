@@ -13,7 +13,7 @@
   "version": {
     "instance": "1.0.0"
   },
-  "description": "Simulated steady-running pump with bearing deterioration during the final 12 hours. The dov:normalOperatingMinimum and dov:normalOperatingMaximum annotations describe fixed normal operating limits, not JSON Schema validation bounds or simulation clamps; anomalous readings remain valid telemetry. All MQTT forms receive the complete JSON telemetry object; individual properties are identified by their JSON keys. The global observeallproperties form is the aggregate telemetry interface.",
+  "description": "Simulated steady-running pump with bearing deterioration during the final 12 hours. The dov:expectedMinimum and dov:expectedMaximum annotations describe expected operating limits, not JSON Schema validation bounds or simulation clamps; anomalous readings remain valid telemetry. All MQTT forms receive the complete JSON telemetry object; individual properties are identified by their JSON keys. The global observeallproperties form is the aggregate telemetry interface.",
   "dov:opcUaSource": {
     "dov:dataSource": "nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=3764731297",
     "description": "Original OPC UA model reference, not a live simulator interface. Property source hrefs retain their original address-space identifiers; the source server endpoint was not supplied."
@@ -61,9 +61,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=2051551167"
       },
       "type": "number",
-      "dov:unit": "Kelvin",
-      "dov:normalOperatingMinimum": 273,
-      "dov:normalOperatingMaximum": 423,
+      "unit": "Kelvin",
+      "dov:expectedMinimum": 273,
+      "dov:expectedMaximum": 423,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -84,9 +84,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=2981318979"
       },
       "type": "number",
-      "dov:unit": "Pascal",
-      "dov:normalOperatingMinimum": 0,
-      "dov:normalOperatingMaximum": 400000,
+      "unit": "Pascal",
+      "dov:expectedMinimum": 0,
+      "dov:expectedMaximum": 400000,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -107,9 +107,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=1749985422"
       },
       "type": "number",
-      "dov:unit": "Kelvin",
-      "dov:normalOperatingMinimum": 263,
-      "dov:normalOperatingMaximum": 395,
+      "unit": "Kelvin",
+      "dov:expectedMinimum": 263,
+      "dov:expectedMaximum": 395,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -130,9 +130,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=678946954"
       },
       "type": "number",
-      "dov:unit": "meter",
-      "dov:normalOperatingMinimum": 0,
-      "dov:normalOperatingMaximum": 5,
+      "unit": "meter",
+      "dov:expectedMinimum": 0,
+      "dov:expectedMaximum": 5,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -153,9 +153,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=2818955220"
       },
       "type": "number",
-      "dov:unit": "kg/s",
-      "dov:normalOperatingMinimum": 0,
-      "dov:normalOperatingMaximum": 10,
+      "unit": "kg/s",
+      "dov:expectedMinimum": 0,
+      "dov:expectedMaximum": 10,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -197,9 +197,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=3078466443"
       },
       "type": "number",
-      "dov:unit": "Percent",
-      "dov:normalOperatingMinimum": 0,
-      "dov:normalOperatingMaximum": 100,
+      "unit": "Percent",
+      "dov:expectedMinimum": 0,
+      "dov:expectedMaximum": 100,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -220,9 +220,9 @@
         "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=1071090168"
       },
       "type": "number",
-      "dov:unit": "Watt",
-      "dov:normalOperatingMinimum": 0,
-      "dov:normalOperatingMaximum": 4000,
+      "unit": "Watt",
+      "dov:expectedMinimum": 0,
+      "dov:expectedMaximum": 4000,
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -244,7 +244,7 @@
         "placeholder": true
       },
       "type": "boolean",
-      "dov:unit": "state",
+      "unit": "state",
       "readOnly": true,
       "observable": true,
       "forms": [
@@ -266,7 +266,7 @@
         "placeholder": true
       },
       "type": "boolean",
-      "dov:unit": "state",
+      "unit": "state",
       "readOnly": true,
       "observable": true,
       "forms": [

@@ -96,7 +96,9 @@ This is an illustrative snapshot, not an exact seed fixture.
 | `FC` | Fluid cavitation | Boolean state | — |
 | `MO` | Motor overheat | Boolean state | — |
 
-The TD preserves the supplied `dov:unit`, `dov:normalOperatingMinimum`, and `dov:normalOperatingMaximum` annotations. Normal ranges are **not JSON Schema validation bounds**: a bearing reading above 423 K must remain valid telemetry.
+The TD uses native WoT `unit` for the supplied human-readable unit text. OPC UA `EURange.Low` and `EURange.High` map to `dov:expectedMinimum` and `dov:expectedMaximum`. Expected operating ranges are **not JSON Schema `minimum` / `maximum` validation bounds**: a bearing reading above 423 K must remain valid telemetry. Existing unit strings and range values are unchanged; `NS.minimum: 0` is a separate nonnegative-count constraint, not an engineering range.
+
+When raw OPC UA `EUInformation` is available, `dov:opcUaEngineeringUnit` preserves `unitId` and the available `namespaceUri`, `displayName`, and `description`. For the OPC Foundation UN/CEFACT namespace, successfully decoded IDs additionally supply `uneceCommonCode`; recognized units can be identified semantically with `qudt:hasUnit: { "@id": "…" }` and a declared `qudt` context prefix. This model has no raw `EUInformation` fields, so no unit IDs, UN/CEFACT codes, or QUDT identities are fabricated.
 
 The TD's MQTT forms describe the default local endpoint, topic, and unauthenticated security configuration. If deploying elsewhere, update the forms/security to match that deployment and publish/register the revised TD. The CLI does not rewrite the bundled model. Subscription forms use `mqv:filter` and string QoS `"1"`, as specified by the WoT MQTT binding; runtime delivery uses QoS level 1. Per-property forms use the same aggregate JSON stream; the abbreviated key identifies the value in each snapshot.
 
@@ -118,7 +120,7 @@ Publications also set the standard MQTT content type `application/json` and UTF-
 The consumer resolves the reference and looks up, for example:
 
 ```text
-payload["BT"] -> TD.properties["BT"] -> title, unit, normal operating limits
+payload["BT"] -> TD.properties["BT"] -> title, unit, expected operating limits
 ```
 
 Use a version-specific model reference so changes to a model do not reinterpret historical data.
