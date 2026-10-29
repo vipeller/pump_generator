@@ -1,0 +1,285 @@
+{
+  "@context": [
+    "https://www.w3.org/2022/wot/td/v1.1",
+    {
+      "dov": "http://azure.com/IoT/operations/tm#",
+      "mqv": "http://www.w3.org/2019/wot/mqtt#",
+      "pg": "urn:pump-generator:metadata:"
+    }
+  ],
+  "@type": "Thing",
+  "id": "urn:pump-generator:model:pump-telemetry:1.0.0",
+  "title": "Pump telemetry simulator",
+  "version": {
+    "instance": "1.0.0"
+  },
+  "description": "Simulated steady-running pump with bearing deterioration during the final 12 hours. The dov:normalOperatingMinimum and dov:normalOperatingMaximum annotations describe fixed normal operating limits, not JSON Schema validation bounds or simulation clamps; anomalous readings remain valid telemetry. All MQTT forms receive the complete JSON telemetry object; individual properties are identified by their JSON keys. The global observeallproperties form is the aggregate telemetry interface.",
+  "dov:opcUaSource": {
+    "dov:dataSource": "nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=3764731297",
+    "description": "Original OPC UA model reference, not a live simulator interface. Property source hrefs retain their original address-space identifiers; the source server endpoint was not supplied."
+  },
+  "securityDefinitions": {
+    "nosec_sc": {
+      "scheme": "nosec"
+    }
+  },
+  "security": ["nosec_sc"],
+  "forms": [
+    {
+      "href": "mqtts://aio-broker.azure-iot-operations:18883",
+      "op": "observeallproperties",
+      "contentType": "application/json",
+      "mqv:controlPacket": "subscribe",
+      "mqv:filter": "pumps/pump-001/telemetry",
+      "mqv:qos": "1",
+      "mqv:retain": false
+    }
+  ],
+  "properties": {
+    "Timestamp": {
+      "title": "Timestamp",
+      "description": "UTC simulation event time in RFC 3339 format, not wall-clock publication time.",
+      "type": "string",
+      "format": "date-time",
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "BT": {
+      "title": "Operational.Measurements.BearingTemperature",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=2051551167"
+      },
+      "type": "number",
+      "dov:unit": "Kelvin",
+      "dov:normalOperatingMinimum": 273,
+      "dov:normalOperatingMaximum": 423,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "DP": {
+      "title": "Operational.Measurements.DifferentialPressure",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=2981318979"
+      },
+      "type": "number",
+      "dov:unit": "Pascal",
+      "dov:normalOperatingMinimum": 0,
+      "dov:normalOperatingMaximum": 400000,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "FT": {
+      "title": "Operational.Measurements.FluidTemperature",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=1749985422"
+      },
+      "type": "number",
+      "dov:unit": "Kelvin",
+      "dov:normalOperatingMinimum": 263,
+      "dov:normalOperatingMaximum": 395,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "LV": {
+      "title": "Operational.Measurements.Level",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=678946954"
+      },
+      "type": "number",
+      "dov:unit": "meter",
+      "dov:normalOperatingMinimum": 0,
+      "dov:normalOperatingMaximum": 5,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "MF": {
+      "title": "Operational.Measurements.MassFlow",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=2818955220"
+      },
+      "type": "number",
+      "dov:unit": "kg/s",
+      "dov:normalOperatingMinimum": 0,
+      "dov:normalOperatingMaximum": 10,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "NS": {
+      "title": "Operational.Measurements.NumberOfStarts",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=53451422"
+      },
+      "type": "integer",
+      "minimum": 0,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "PE": {
+      "title": "Operational.Measurements.PumpEfficiency",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=3078466443"
+      },
+      "type": "number",
+      "dov:unit": "Percent",
+      "dov:normalOperatingMinimum": 0,
+      "dov:normalOperatingMaximum": 100,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "PPI": {
+      "title": "Operational.Measurements.PumpPowerInput",
+      "dov:opcUaSource": {
+        "href": "/?id=nsu=urn:localhost:OPCFoundation:PumpDeviceIntegrationServer;i=1071090168"
+      },
+      "type": "number",
+      "dov:unit": "Watt",
+      "dov:normalOperatingMinimum": 0,
+      "dov:normalOperatingMaximum": 4000,
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "FC": {
+      "title": "Events.SupervisionProcessFluid.Cavitation",
+      "dov:opcUaSource": {
+        "href": "/?id=i=0",
+        "placeholder": true
+      },
+      "type": "boolean",
+      "dov:unit": "state",
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    },
+    "MO": {
+      "title": "Events.SupervisionPumpOperation.MotorOverheat",
+      "dov:opcUaSource": {
+        "href": "/?id=i=0",
+        "placeholder": true
+      },
+      "type": "boolean",
+      "dov:unit": "state",
+      "readOnly": true,
+      "observable": true,
+      "forms": [
+        {
+          "href": "mqtts://aio-broker.azure-iot-operations:18883",
+          "op": "observeproperty",
+          "contentType": "application/json",
+          "mqv:controlPacket": "subscribe",
+          "mqv:filter": "pumps/pump-001/telemetry",
+          "mqv:qos": "1",
+          "mqv:retain": false
+        }
+      ]
+    }
+  }
+}
